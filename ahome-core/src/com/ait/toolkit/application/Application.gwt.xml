@@ -8,9 +8,8 @@
 	<property-provider name="applicationType">
   			<![CDATA[
        				if(((typeof ($wnd) != 'undefined') || (typeof (window) != 'undefined'))){
-            			Titanium = $wnd.Titanium;
-		    			Ti = $wnd.Ti;
-            		return 'web';
+            			
+            					return 'web';
        				}else{
           					return 'device';
        				}
