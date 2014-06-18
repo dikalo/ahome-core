@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module>
-  <inherits name='com.ait.toolkit.core.Core'/>
-  <generate-with class="com.ait.toolkit.rebind.BeanModelGenerator">
-		<when-type-assignable class="com.ait.toolkit.data.client.BeanLookup" />
-	</generate-with>
-</module>
