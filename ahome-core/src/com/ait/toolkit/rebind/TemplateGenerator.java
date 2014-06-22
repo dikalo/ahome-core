@@ -47,18 +47,13 @@ public class TemplateGenerator extends Generator {
 	private JClassType templatesInterface;
 
 	/**
-	 * Given a TemplateResource interface, return the path to its .html file,
-	 * suitable for any classloader to find it as a resource. If the .html does
-	 * not exist or is empty see if the template was declared inline. If no
-	 * content is found we throw an exception.
+	 * Given a TemplateResource interface, return the path to its .html file, suitable for any classloader to find it as a resource. If the .html does not exist or is empty see if
+	 * the template was declared inline. If no content is found we throw an exception.
 	 */
-	private String getTemplateContent(GeneratorContext context,
-			TreeLogger logger, JClassType interfaceType)
-			throws UnableToCompleteException {
+	private String getTemplateContent(GeneratorContext context, TreeLogger logger, JClassType interfaceType) throws UnableToCompleteException {
 		String templateHtmlFile = null;
 
-		TemplateResource annotation = interfaceType
-				.getAnnotation(TemplateResource.class);
+		TemplateResource annotation = interfaceType.getAnnotation(TemplateResource.class);
 		if (annotation == null) {
 			// if the interface is defined as a nested class, use the name of
 			// the
@@ -66,17 +61,12 @@ public class TemplateGenerator extends Generator {
 			if (interfaceType.getEnclosingType() != null) {
 				interfaceType = interfaceType.getEnclosingType();
 			}
-			templateHtmlFile = slashify(interfaceType.getQualifiedBinaryName())
-					+ TEMPLATE_SUFFIX;
+			templateHtmlFile = slashify(interfaceType.getQualifiedBinaryName()) + TEMPLATE_SUFFIX;
 			logger.log(TreeLogger.INFO, "Template : " + templateHtmlFile);
 
-			InputStream stream = getTemplateResource(context, logger,
-					templateHtmlFile);
+			InputStream stream = getTemplateResource(context, logger, templateHtmlFile);
 			if (stream == null) {
-				logger.log(Type.ERROR,
-						"No data could be loaded - no data at path "
-								+ interfaceType.getQualifiedBinaryName()
-								+ TEMPLATE_SUFFIX);
+				logger.log(Type.ERROR, "No data could be loaded - no data at path " + interfaceType.getQualifiedBinaryName() + TEMPLATE_SUFFIX);
 				throw new UnableToCompleteException();
 			}
 			return sanitize(Util.readStreamAsString(stream));
@@ -88,29 +78,22 @@ public class TemplateGenerator extends Generator {
 			if (templateHtmlFile.length() > 0) {
 
 				if (!templateHtmlFile.endsWith(TEMPLATE_SUFFIX)) {
-					logger.log(TreeLogger.ERROR,
-							"Template file name must end with "
-									+ TEMPLATE_SUFFIX);
+					logger.log(TreeLogger.ERROR, "Template file name must end with " + TEMPLATE_SUFFIX);
 					throw new UnableToCompleteException();
 				}
 
 				if (annotation.value().length() != 0) {
-					logger.log(Type.WARN,
-							"Found both source file and inline template, using source file");
+					logger.log(Type.WARN, "Found both source file and inline template, using source file");
 				}
 
-				templateHtmlFile = slashify(interfaceType.getPackage()
-						.getName()) + "/" + templateHtmlFile;
-				InputStream stream = getTemplateResource(context, logger,
-						templateHtmlFile);
+				templateHtmlFile = slashify(interfaceType.getPackage().getName()) + "/" + templateHtmlFile;
+				InputStream stream = getTemplateResource(context, logger, templateHtmlFile);
 				return sanitize(Util.readStreamAsString(stream));
 
 			} else if (annotation.value().length() > 0) {
 				return annotation.value();
 			} else {
-				logger.log(
-						Type.ERROR,
-						"Template annotation found with no contents, cannot generate method , this may cause other failures.");
+				logger.log(Type.ERROR, "Template annotation found with no contents, cannot generate method , this may cause other failures.");
 			}
 
 		}
@@ -122,16 +105,13 @@ public class TemplateGenerator extends Generator {
 	}
 
 	private static String sanitize(String input) {
-		return input.replace("\n", "").replace("'", "\\'")
-				.replace("\"", "\\\"");
+		return input.replace("\n", "").replace("'", "\\'").replace("\"", "\\\"");
 	}
 
 	@Override
-	public String generate(TreeLogger logger, GeneratorContext context,
-			String typeName) throws UnableToCompleteException {
+	public String generate(TreeLogger logger, GeneratorContext context, String typeName) throws UnableToCompleteException {
 		TypeOracle oracle = context.getTypeOracle();
-		this.templatesInterface = oracle.findType(Name
-				.getSourceNameForClass(Template.class));
+		this.templatesInterface = oracle.findType(Name.getSourceNameForClass(Template.class));
 
 		JClassType interfaceType;
 		try {
@@ -151,36 +131,35 @@ public class TemplateGenerator extends Generator {
 
 		String content = getTemplateContent(context, logger, interfaceType);
 		String packageName = interfaceType.getPackage().getName();
-		String className = "Template_For_"
-				+ interfaceType.getQualifiedSourceName().replace(".", "_");
+		String className = "Tpl_For_" + interfaceType.getQualifiedSourceName().replace(".", "_") + "_Generated";
 
-		ClassSourceFileComposerFactory composer = new ClassSourceFileComposerFactory(
-				packageName, className);
+		ClassSourceFileComposerFactory composer = new ClassSourceFileComposerFactory(packageName, className);
 		composer.addImport(SafeHtml.class.getName());
 		composer.addImport(SafeHtmlUtils.class.getName());
 		composer.addImplementedInterface(Template.class.getName());
 
 		PrintWriter pw = context.tryCreate(logger, packageName, className);
-		SourceWriter sw = composer.createSourceWriter(context, pw);
 
-		sw.println("  public SafeHtml getContent(){");
-		sw.println("      return SafeHtmlUtils.fromSafeConstant(\"" + content
-				+ "\");");
-		sw.println("  }");
-		sw.println("");
-		sw.println("");
-		sw.println("  public SafeHtml getSafeContent(){");
-		sw.println("      return SafeHtmlUtils.fromString(\"" + content
-				+ "\");");
-		sw.println("  }");
+		if (pw != null) {
+			SourceWriter sw = composer.createSourceWriter(context, pw);
 
-		sw.commit(logger);
+			sw.println("  public SafeHtml getContent(){");
+			sw.println("      return SafeHtmlUtils.fromSafeConstant(\"" + content + "\");");
+			sw.println("  }");
+			sw.println("");
+			sw.println("");
+			sw.println("  public SafeHtml getSafeContent(){");
+			sw.println("      return SafeHtmlUtils.fromString(\"" + content + "\");");
+			sw.println("  }");
+
+			sw.commit(logger);
+		}
+
 		return composer.getCreatedClassName();
 
 	}
 
-	protected InputStream getTemplateResource(GeneratorContext context,
-			TreeLogger l, String markerPath) throws UnableToCompleteException {
+	protected InputStream getTemplateResource(GeneratorContext context, TreeLogger l, String markerPath) throws UnableToCompleteException {
 		// look for a local file first
 		String path = slashify(markerPath);
 		l.log(Type.INFO, "Current resource path : " + markerPath);
@@ -188,11 +167,12 @@ public class TemplateGenerator extends Generator {
 		// if not a local path, try an absolute one
 		if (res == null) {
 			l.log(Type.INFO, "Resource is Null trying with URL ");
-			URL url = Thread.currentThread().getContextClassLoader()
-					.getResource(markerPath);
+			URL url = Thread.currentThread().getContextClassLoader().getResource(markerPath);
 			if (url == null) {
 				l.log(Type.INFO, "URL seems to be null here ... hmmmmss");
 				return null;
+			} else {
+				l.log(Type.INFO, "URL seems to be NOT null.");
 			}
 			try {
 				return url.openStream();

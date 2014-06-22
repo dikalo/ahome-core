@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module>
-  <inherits name='com.google.gwt.core.Core'/>
    <generate-with class="com.ait.toolkit.rebind.TemplateGenerator">
 		<when-type-assignable class="com.ait.toolkit.core.client.Template" />
 	</generate-with>

@@ -48,8 +48,7 @@ public class BeanModelGenerator extends Generator {
 	protected List<JClassType> beans;
 
 	@Override
-	public String generate(TreeLogger logger, GeneratorContext context,
-			String typeName) throws UnableToCompleteException {
+	public String generate(TreeLogger logger, GeneratorContext context, String typeName) throws UnableToCompleteException {
 		oracle = context.getTypeOracle();
 		beanModelMarkerType = oracle.findType(BeanMarker.class.getName());
 		beanModelTagType = oracle.findType(BeanTag.class.getName());
@@ -66,19 +65,16 @@ public class BeanModelGenerator extends Generator {
 				}
 			}
 
-			final String genPackageName = BeanLookup.class.getPackage()
-					.getName();
+			final String genPackageName = BeanLookup.class.getPackage().getName();
 			final String genClassName = "BeanLookupImpl";
 
-			ClassSourceFileComposerFactory composer = new ClassSourceFileComposerFactory(
-					genPackageName, genClassName);
+			ClassSourceFileComposerFactory composer = new ClassSourceFileComposerFactory(genPackageName, genClassName);
 			composer.setSuperclass(BeanLookup.class.getCanonicalName());
 			composer.addImport(BeanFactory.class.getName());
 			composer.addImport(Map.class.getName());
 			composer.addImport(FastMap.class.getName());
 
-			PrintWriter pw = context.tryCreate(logger, genPackageName,
-					genClassName);
+			PrintWriter pw = context.tryCreate(logger, genPackageName, genClassName);
 
 			if (pw != null) {
 				SourceWriter sw = composer.createSourceWriter(context, pw);
@@ -102,13 +98,11 @@ public class BeanModelGenerator extends Generator {
 					if (i > 0) {
 						sw.print(" else ");
 					}
-					sw.println("if (" + bean.getQualifiedSourceName()
-							+ ".class.getName().equals(n)) {");
+					sw.println("if (" + bean.getQualifiedSourceName() + ".class.getName().equals(n)) {");
 					sw.indentln("m" + i + "();");
 
 					sb.append("private void m" + i + "() {\n");
-					sb.append("  m.put(" + bean.getQualifiedSourceName()
-							+ ".class.getName(), new " + factory + "());\n");
+					sb.append("  m.put(" + bean.getQualifiedSourceName() + ".class.getName(), new " + factory + "());\n");
 					sb.append("}\n");
 
 					sw.print("}");
@@ -132,17 +126,13 @@ public class BeanModelGenerator extends Generator {
 
 	}
 
-	protected String createFactory(JClassType bean, String beanModelName,
-			TreeLogger logger, GeneratorContext context) throws Exception {
+	protected String createFactory(JClassType bean, String beanModelName, TreeLogger logger, GeneratorContext context) throws Exception {
 		final String genPackageName = BeanLookup.class.getPackage().getName();
-		final String genClassName = "Bean_"
-				+ bean.getQualifiedSourceName().replace(".", "_") + "_Factory";
+		final String genClassName = "Bean_" + bean.getQualifiedSourceName().replace(".", "_") + "_Factory";
 
-		ClassSourceFileComposerFactory composer = new ClassSourceFileComposerFactory(
-				genPackageName, genClassName);
+		ClassSourceFileComposerFactory composer = new ClassSourceFileComposerFactory(genPackageName, genClassName);
 		composer.setSuperclass(BeanFactory.class.getCanonicalName());
-		PrintWriter pw = context
-				.tryCreate(logger, genPackageName, genClassName);
+		PrintWriter pw = context.tryCreate(logger, genPackageName, genClassName);
 
 		if (pw != null) {
 			List<JMethod> getters = findGetters(bean);
@@ -157,8 +147,7 @@ public class BeanModelGenerator extends Generator {
 			for (JMethod method : getters) {
 				String s = method.getName();
 				String p = lowerFirst(s.substring(s.startsWith("g") ? 3 : 2)); // get
-				sw.println("model.set(\"" + p + "\"," + " ((" + typeName
-						+ ")bean)." + s + "()" + ");");
+				sw.println("model.set(\"" + p + "\"," + " ((" + typeName + ")bean)." + s + "()" + ");");
 			}
 			sw.println("model.setBean(bean);");
 			sw.println("return model;");
@@ -168,19 +157,15 @@ public class BeanModelGenerator extends Generator {
 		return composer.getCreatedClassName();
 	}
 
-	protected String createBean(JClassType bean, TreeLogger logger,
-			GeneratorContext context) throws Exception {
+	protected String createBean(JClassType bean, TreeLogger logger, GeneratorContext context) throws Exception {
 		final String genPackageName = bean.getPackage().getName();
-		final String genClassName = "Bean_"
-				+ bean.getQualifiedSourceName().replace(".", "_");
+		final String genClassName = "Bean_" + bean.getQualifiedSourceName().replace(".", "_");
 
-		ClassSourceFileComposerFactory composer = new ClassSourceFileComposerFactory(
-				genPackageName, genClassName);
+		ClassSourceFileComposerFactory composer = new ClassSourceFileComposerFactory(genPackageName, genClassName);
 		composer.setSuperclass(Bean.class.getCanonicalName());
 		composer.addImport(Bean.class.getName());
 		composer.addImport(NestedModelUtil.class.getName());
-		PrintWriter pw = context
-				.tryCreate(logger, genPackageName, genClassName);
+		PrintWriter pw = context.tryCreate(logger, genPackageName, genClassName);
 
 		if (pw != null) {
 			List<JMethod> getters = findGetters(bean);
@@ -218,24 +203,20 @@ public class BeanModelGenerator extends Generator {
 		return composer.getCreatedClassName();
 	}
 
-	protected JClassType getMarkerBean(JClassType type)
-			throws NotFoundException {
+	protected JClassType getMarkerBean(JClassType type) throws NotFoundException {
 		BeanClass pojo = type.getAnnotation(BeanClass.class);
 		return oracle.getType(pojo.value().getCanonicalName());
 	}
 
 	protected boolean isBean(JClassType type) {
-		return !type.equals(beanModelTagType)
-				&& type.isAssignableTo(beanModelTagType);
+		return !type.equals(beanModelTagType) && type.isAssignableTo(beanModelTagType);
 	}
 
 	protected boolean isBeanMarker(JClassType type) {
-		return !type.equals(beanModelMarkerType)
-				&& type.isAssignableTo(beanModelMarkerType);
+		return !type.equals(beanModelMarkerType) && type.isAssignableTo(beanModelMarkerType);
 	}
 
-	protected void createGetMethods(List<JMethod> getters, SourceWriter sw,
-			String typeName) {
+	protected void createGetMethods(List<JMethod> getters, SourceWriter sw, String typeName) {
 		sw.println("public <X> X getPropertyAsString(String s) {");
 
 		sw.println("if (allowNestedValues && NestedModelUtil.isNestedProperty(s)) {");
@@ -252,20 +233,14 @@ public class BeanModelGenerator extends Generator {
 			sw.println("Object value = ((" + typeName + ")bean)." + s + "();");
 
 			try {
-				if (returnType != null
-						&& returnType.isAssignableTo(oracle.getType(List.class
-								.getName()))
-						&& returnType.isParameterized() != null) {
+				if (returnType != null && returnType.isAssignableTo(oracle.getType(List.class.getName())) && returnType.isParameterized() != null) {
 					JParameterizedType type = returnType.isParameterized();
 					JClassType[] params = type.getTypeArgs();
 					if (beans.contains(params[0])) {
 						sw.println("if (value != null) {");
 						sw.indent();
 						sw.println("java.util.List list = (java.util.List)value;");
-						sw.println("java.util.List list2 = "
-								+ BeanLookup.class.getCanonicalName()
-								+ ".get().getFactory("
-								+ params[0].getQualifiedSourceName()
+						sw.println("java.util.List list2 = " + BeanLookup.class.getCanonicalName() + ".get().getFactory(" + params[0].getQualifiedSourceName()
 								+ ".class).createModel((java.util.Collection) list);");
 						sw.outdent();
 						sw.println("return (X) list2;");
@@ -290,10 +265,7 @@ public class BeanModelGenerator extends Generator {
 						sw.println("      }");
 						sw.println("    }");
 						sw.println("    if (nestedModel == null) {");
-						sw.println("        nestedModel = "
-								+ BeanLookup.class.getCanonicalName()
-								+ ".get().getFactory("
-								+ returnType.getQualifiedSourceName()
+						sw.println("        nestedModel = " + BeanLookup.class.getCanonicalName() + ".get().getFactory(" + returnType.getQualifiedSourceName()
 								+ ".class).createModel(value);");
 						sw.println("        nestedModels.put(s, nestedModel);");
 						sw.println("    }");
@@ -318,8 +290,7 @@ public class BeanModelGenerator extends Generator {
 		} else if (propName.length() == 1) {
 			return propName.toLowerCase();
 		} else {
-			return propName.substring(0, 1).toLowerCase()
-					+ propName.substring(1);
+			return propName.substring(0, 1).toLowerCase() + propName.substring(1);
 		}
 	}
 
@@ -327,8 +298,7 @@ public class BeanModelGenerator extends Generator {
 		return method.getParameters()[0].getType().getQualifiedSourceName();
 	}
 
-	protected void createSetMethods(List<JMethod> properties, SourceWriter sw,
-			String typeName) {
+	protected void createSetMethods(List<JMethod> properties, SourceWriter sw, String typeName) {
 		sw.println("public <X> X setProperty(String s, X val) {");
 		sw.indent();
 		sw.println("Object obj = val;");
@@ -424,8 +394,7 @@ public class BeanModelGenerator extends Generator {
 			for (JMethod m : cls.getMethods()) {
 				if (m.isPublic() || m.isProtected()) {
 					String name = m.getName();
-					if ((name.matches("get.*") || name.matches("is.*"))
-							&& m.getParameters().length == 0) {
+					if ((name.matches("get.*") || name.matches("is.*")) && m.getParameters().length == 0) {
 						methods.add(m);
 					}
 				}
