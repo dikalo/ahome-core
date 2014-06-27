@@ -15,6 +15,8 @@
  */
 package com.ait.toolkit.core.client;
 
+import java.util.Random;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 
@@ -68,6 +70,11 @@ public class Util {
 			return GWT.getHostPageBaseURL() + GWT.getModuleName() + "/";
 		}
 		return toReturn;
+	}
+
+	public static String randomString() {
+		Random random = new Random();
+		return Long.toString(Math.abs(random.nextLong()), 36);
 	}
 
 }
