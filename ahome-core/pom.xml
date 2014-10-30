@@ -7,4 +7,5 @@
 		<artifactId>ahome-lib</artifactId>
 		<version>1.0.0</version>
 	</parent>
+	<version>1.0.0</version>
 </project>
