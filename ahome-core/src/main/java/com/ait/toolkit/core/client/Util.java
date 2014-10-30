@@ -19,6 +19,9 @@ import java.util.Random;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.ScriptInjector;
+import com.google.gwt.dom.client.StyleInjector;
+import com.google.gwt.resources.client.TextResource;
 
 /**
  * Utility class
@@ -77,4 +80,19 @@ public class Util {
 		return Long.toString(Math.abs(random.nextLong()), 36);
 	}
 
+	public static void injectJs(TextResource js) {
+		injectJs(js.getText());
+	}
+
+	public static void injectJs(String js) {
+		ScriptInjector.fromString(js).setWindow(ScriptInjector.TOP_WINDOW).inject();
+	}
+
+	public static void injectStyle(String css) {
+		StyleInjector.inject(css);
+	}
+
+	public static void injectStyle(TextResource css) {
+		StyleInjector.inject(css.getText());
+	}
 }
