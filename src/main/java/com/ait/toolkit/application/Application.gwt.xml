@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+
+	<!-- Determine if the application is running in the browser of inside titanium mobile -->
+	<define-property name="applicationType" values="device,web" />
+	<collapse-property name="applicationType" values="*" />
+
+	<property-provider name="applicationType">
+  			<![CDATA[
+       				if(((typeof ($wnd) != 'undefined') || (typeof (window) != 'undefined'))){
+            			
+            					return 'web';
+       				}else{
+          					return 'device';
+       				}
+  ]]>
+	</property-provider>
+
+</module>
