@@ -1,17 +1,17 @@
 /*
- Copyright (c) 2014 Ahomé Innovation Technologies. All rights reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ * Copyright 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.google.gwt.uibinder.rebind;
 
@@ -23,6 +23,8 @@ import com.google.gwt.core.ext.typeinfo.JParameter;
 import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
+import com.google.gwt.core.shared.impl.StringCase;
+import com.google.gwt.dev.resource.ResourceOracle;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.resources.client.DataResource;
 import com.google.gwt.resources.client.ImageResource;
@@ -90,6 +92,9 @@ public class UiBinderParser {
   private static final String REPEAT_STYLE_ATTRIBUTE = "repeatStyle";
   private static final String SOURCE_ATTRIBUTE = "src";
   private static final String TYPE_ATTRIBUTE = "type";
+  private static final String GSS_ATTRIBUTE = "gss";
+  private static final String DO_NOT_EMBED_ATTRIBUTE = "doNotEmbed";
+  private static final String MIME_TYPE_ATTRIBUTE = "mimeType";
 
   // TODO(rjrjr) Make all the ElementParsers receive their dependencies via
   // constructor like this one does, and make this an ElementParser. I want
@@ -108,10 +113,11 @@ public class UiBinderParser {
   private final JClassType dataResourceType;
   private final String binderUri;
   private final UiBinderContext uiBinderContext;
+  private final ResourceOracle resourceOracle;
 
   public UiBinderParser(UiBinderWriter writer, MessagesWriter messagesWriter,
-      FieldManager fieldManager, TypeOracle oracle,
-      ImplicitClientBundle bundleClass, String binderUri, UiBinderContext uiBinderContext) {
+      FieldManager fieldManager, TypeOracle oracle, ImplicitClientBundle bundleClass,
+      String binderUri, UiBinderContext uiBinderContext, ResourceOracle resourceOracle) {
     this.writer = writer;
     this.oracle = oracle;
     this.messagesWriter = messagesWriter;
@@ -122,6 +128,7 @@ public class UiBinderParser {
     this.imageResourceType = oracle.findType(ImageResource.class.getCanonicalName());
     this.dataResourceType = oracle.findType(DataResource.class.getCanonicalName());
     this.binderUri = binderUri;
+    this.resourceOracle = resourceOracle;
   }
 
   /**
@@ -129,7 +136,6 @@ public class UiBinderParser {
    * the document.
    */
   public FieldWriter parse(XMLElement elem) throws UnableToCompleteException {
-	  
     if (!writer.isBinderElement(elem)) {
       writer.die(elem, "Bad prefix on <%s:%s>? The root element must be in "
           + "xml namespace \"%s\" (usually with prefix \"ui:\"), "
@@ -178,8 +184,12 @@ public class UiBinderParser {
   private void createData(XMLElement elem) throws UnableToCompleteException {
     String name = elem.consumeRequiredRawAttribute(FIELD_ATTRIBUTE);
     String source = elem.consumeRequiredRawAttribute(SOURCE_ATTRIBUTE);
-    ImplicitDataResource dataMethod = bundleClass.createDataResource(name,
-        source);
+    // doNotEmbed is optional on DataResource
+    Boolean doNotEmbed = elem.consumeBooleanConstantAttribute(DO_NOT_EMBED_ATTRIBUTE);
+    // mimeType is optional on DataResource
+    String mimeType = elem.consumeRawAttribute(MIME_TYPE_ATTRIBUTE);
+    ImplicitDataResource dataMethod = bundleClass.createDataResource(
+        name, source, mimeType, doNotEmbed);
     FieldWriter field = fieldManager.registerField(dataResourceType,
         dataMethod.getName());
     field.setInitializer(String.format("%s.%s()",
@@ -308,7 +318,7 @@ public class UiBinderParser {
       }
     }
 
-    /* Nope. If we know the type, maybe a @ClientFactory will make it */
+    /* Nope. If we know the type, maybe a @UiFactory will make it */
 
     if (resourceType != null && writer.getOwnerClass().getUiFactoryMethod(resourceType) != null) {
       createResourceUiFactory(elem, resourceName, resourceType);
@@ -325,7 +335,7 @@ public class UiBinderParser {
       writer.die(elem, "Could not infer type for field %s.", resourceName);
     }
 
-    // process ui:attributes child for property setting 
+    // process ui:attributes child for property setting
     boolean attributesChildFound = false;
     // Use consumeChildElements(Interpreter) so no assertEmpty check is performed
     for (XMLElement child : elem.consumeChildElements(new SimpleInterpeter<Boolean>(true))) {
@@ -442,8 +452,10 @@ public class UiBinderParser {
       importTypes.add(findCssResourceType(elem, type));
     }
 
+    Boolean gss = elem.consumeBooleanConstantAttribute(GSS_ATTRIBUTE);
+
     ImplicitCssResource cssMethod = bundleClass.createCssResource(name, source,
-        publicType, body, importTypes);
+        publicType, body, importTypes, gss, resourceOracle);
 
     FieldWriter field = fieldManager.registerFieldForGeneratedCssResource(cssMethod);
     field.setInitializer(String.format("%s.%s()",
@@ -501,7 +513,7 @@ public class UiBinderParser {
 
         if (writer.isBinderElement(elem)) {
           try {
-            Resource.valueOf(elem.getLocalName().toUpperCase()).create(
+            Resource.valueOf(StringCase.toUpper(elem.getLocalName())).create(
                 UiBinderParser.this, elem);
           } catch (IllegalArgumentException e) {
             writer.die(elem,

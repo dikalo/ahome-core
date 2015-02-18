@@ -1,17 +1,17 @@
 /*
- Copyright (c) 2014 Ahomé Innovation Technologies. All rights reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ * Copyright 2008 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.google.gwt.uibinder.rebind;
 
@@ -39,20 +39,19 @@ import java.io.PrintWriter;
 import java.util.List;
 
 /**
- * Generator for implementations of
- * {@link com.google.gwt.uibinder.client.UiBinder}.
+ * Generator for implementations of {@link com.google.gwt.uibinder.client.UiBinder}.
  */
 public class UiBinderGenerator extends Generator {
 
   private static final String BINDER_URI = "urn:ui:com.google.gwt.uibinder";
 
-  private static final String TEMPLATE_SUFFIX = ".ui.xml";
-
-  private static final String XSS_SAFE_CONFIG_PROPERTY = "UiBinder.useSafeHtmlTemplates";
-  private static final String LAZY_WIDGET_BUILDERS_PROPERTY = "UiBinder.useLazyWidgetBuilders";
-  
-  private static boolean gaveSafeHtmlWarning;
   private static boolean gaveLazyBuildersWarning;
+
+  private static boolean gaveSafeHtmlWarning;
+  private static final String LAZY_WIDGET_BUILDERS_PROPERTY = "UiBinder.useLazyWidgetBuilders";
+
+  private static final String TEMPLATE_SUFFIX = ".ui.xml";
+  private static final String XSS_SAFE_CONFIG_PROPERTY = "UiBinder.useSafeHtmlTemplates";
 
   /**
    * Given a UiBinder interface, return the path to its ui.xml file, suitable
@@ -101,7 +100,6 @@ public class UiBinderGenerator extends Generator {
   public String generate(TreeLogger logger, GeneratorContext genCtx,
       String fqInterfaceName) throws UnableToCompleteException {
     TypeOracle oracle = genCtx.getTypeOracle();
-    ResourceOracle resourceOracle = genCtx.getResourcesOracle();
 
     JClassType interfaceType;
     try {
@@ -126,9 +124,8 @@ public class UiBinderGenerator extends Generator {
     PrintWriter printWriter = writers.tryToMakePrintWriterFor(implName);
 
     if (printWriter != null) {
-
       generateOnce(interfaceType, implName, printWriter, logger, oracle,
-          resourceOracle, genCtx.getPropertyOracle(), writers, designTime);
+          genCtx.getResourcesOracle(), genCtx.getPropertyOracle(), writers, designTime);
     }
     return packageName + "." + implName;
   }
@@ -156,25 +153,31 @@ public class UiBinderGenerator extends Generator {
   private void generateOnce(JClassType interfaceType, String implName,
       PrintWriter binderPrintWriter, TreeLogger treeLogger, TypeOracle oracle,
       ResourceOracle resourceOracle, PropertyOracle propertyOracle,
-      PrintWriterManager writerManager,  DesignTimeUtils designTime)
+      PrintWriterManager writerManager, DesignTimeUtils designTime)
   throws UnableToCompleteException {
 
     MortalLogger logger = new MortalLogger(treeLogger);
     String templatePath = deduceTemplateFile(logger, interfaceType);
     MessagesWriter messages = new MessagesWriter(oracle, BINDER_URI, logger,
-        templatePath, interfaceType.getPackage().getName(), implName);	  
-
+        templatePath, interfaceType.getPackage().getName(), implName);
 
     boolean useLazyWidgetBuilders =
         useLazyWidgetBuilders(logger, propertyOracle) && !designTime.isDesignTime();
     FieldManager fieldManager = new FieldManager(oracle, logger, useLazyWidgetBuilders);
-    
-    UiBinderWriter uiBinderWriter = new UiBinderWriter(interfaceType, implName,
-        templatePath, oracle, logger, fieldManager, messages, designTime, uiBinderCtx,
-        useSafeHtmlTemplates(logger, propertyOracle), useLazyWidgetBuilders, BINDER_URI);
 
-    Document doc = getW3cDoc(logger, designTime, resourceOracle, templatePath);
-    designTime.rememberPathForElements(doc);	  
+    UiBinderWriter uiBinderWriter = new UiBinderWriter(interfaceType, implName, templatePath,
+        oracle, logger, fieldManager, messages, designTime, uiBinderCtx,
+        useSafeHtmlTemplates(logger, propertyOracle), useLazyWidgetBuilders, BINDER_URI,
+        resourceOracle);
+
+    Resource resource = getTemplateResource(logger, templatePath, resourceOracle);
+
+    // Ensure that generated uibinder source is modified at least as often as synthesized .cssmap
+    // resources, otherwise it would be possible to synthesize a modified .cssmap resource but fail
+    // to retrigger the InlineClientBundleGenerator that processes it.
+    binderPrintWriter.println("// .ui.xml template last modified: " + resource.getLastModified());
+    Document doc = getW3cDoc(logger, designTime, resourceOracle, templatePath, resource);
+    designTime.rememberPathForElements(doc);
 
     uiBinderWriter.parseDocument(doc, binderPrintWriter);
 
@@ -189,13 +192,8 @@ public class UiBinderGenerator extends Generator {
   }
 
   private Document getW3cDoc(MortalLogger logger, DesignTimeUtils designTime,
-      ResourceOracle resourceOracle, String templatePath)
+      ResourceOracle resourceOracle, String templatePath, Resource resource)
       throws UnableToCompleteException {
-
-    Resource resource = resourceOracle.getResourceMap().get(templatePath);
-    if (null == resource) {
-      logger.die("Unable to find resource: " + templatePath);
-    }
 
     Document doc = null;
     try {
@@ -213,6 +211,15 @@ public class UiBinderGenerator extends Generator {
               + e.getMessage(), e);
     }
     return doc;
+  }
+
+  private Resource getTemplateResource(MortalLogger logger, String templatePath,
+      ResourceOracle resourceOracle) throws UnableToCompleteException {
+    Resource resource = resourceOracle.getResource(templatePath);
+    if (null == resource) {
+      logger.die("Unable to find resource: " + templatePath);
+    }
+    return resource;
   }
 
   private Boolean useLazyWidgetBuilders(MortalLogger logger, PropertyOracle propertyOracle) {
