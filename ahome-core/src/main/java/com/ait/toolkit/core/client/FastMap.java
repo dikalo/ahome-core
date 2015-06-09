@@ -53,10 +53,12 @@ public class FastMap<V> extends AbstractMap<String, V> implements Serializable {
 			return false;
 		}
 
+		@Override
 		public String getKey() {
 			return key;
 		}
 
+		@Override
 		public V getValue() {
 			return value;
 		}
@@ -74,6 +76,7 @@ public class FastMap<V> extends AbstractMap<String, V> implements Serializable {
 			return keyHash ^ valueHash;
 		}
 
+		@Override
 		public V setValue(V object) {
 			V old = value;
 			value = object;
@@ -178,9 +181,8 @@ public class FastMap<V> extends AbstractMap<String, V> implements Serializable {
 	public boolean containsKey(Object key) {
 		if (GWT.isScript()) {
 			return map.containsKey(String.valueOf(key));
-		} else {
-			return javaMap.containsKey(key);
 		}
+		return javaMap.containsKey(key);
 	}
 
 	@Override
@@ -199,9 +201,8 @@ public class FastMap<V> extends AbstractMap<String, V> implements Serializable {
 					Object value = get(s.getKey());
 					if (value == null) {
 						return value == s.getValue();
-					} else {
-						return value.equals(s.getValue());
 					}
+					return value.equals(s.getValue());
 				}
 
 				@Override
@@ -210,15 +211,18 @@ public class FastMap<V> extends AbstractMap<String, V> implements Serializable {
 					Iterator<Map.Entry<String, V>> custom = new Iterator<Map.Entry<String, V>>() {
 						Iterator<String> keys = keySet().iterator();
 
+						@Override
 						public boolean hasNext() {
 							return keys.hasNext();
 						}
 
+						@Override
 						public Map.Entry<String, V> next() {
 							String key = keys.next();
 							return new FastMapEntry<V>(key, get(key));
 						}
 
+						@Override
 						public void remove() {
 							keys.remove();
 						}
@@ -232,18 +236,16 @@ public class FastMap<V> extends AbstractMap<String, V> implements Serializable {
 				}
 
 			};
-		} else {
-			return javaMap.entrySet();
 		}
+		return javaMap.entrySet();
 	}
 
 	@Override
 	public V get(Object key) {
 		if (GWT.isScript()) {
 			return map.get(String.valueOf(key));
-		} else {
-			return javaMap.get(key);
 		}
+		return javaMap.get(key);
 	}
 
 	@Override
@@ -270,18 +272,16 @@ public class FastMap<V> extends AbstractMap<String, V> implements Serializable {
 					return FastMap.this.size();
 				}
 			};
-		} else {
-			return javaMap.keySet();
 		}
+		return javaMap.keySet();
 	}
 
 	@Override
 	public V put(String key, V value) {
 		if (GWT.isScript()) {
 			return map.put(key, value);
-		} else {
-			return javaMap.put(key, value);
 		}
+		return javaMap.put(key, value);
 	}
 
 	@Override
@@ -299,27 +299,24 @@ public class FastMap<V> extends AbstractMap<String, V> implements Serializable {
 	public V remove(Object key) {
 		if (GWT.isScript()) {
 			return map.remove((String) key);
-		} else {
-			return javaMap.remove(key);
 		}
+		return javaMap.remove(key);
 	}
 
 	@Override
 	public int size() {
 		if (GWT.isScript()) {
 			return map.size();
-		} else {
-			return javaMap.size();
 		}
+		return javaMap.size();
 	}
 
 	@Override
 	public Collection<V> values() {
 		if (GWT.isScript()) {
 			return map.values();
-		} else {
-			return javaMap.values();
 		}
+		return javaMap.values();
 	}
 
 }

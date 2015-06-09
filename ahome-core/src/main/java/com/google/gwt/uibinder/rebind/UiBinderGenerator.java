@@ -68,8 +68,8 @@ public class UiBinderGenerator extends Generator {
         interfaceType = interfaceType.getEnclosingType();
       }
       return slashify(interfaceType.getQualifiedBinaryName()) + TEMPLATE_SUFFIX;
-    } else {
-      templateName = annotation.value();
+    }
+    templateName = annotation.value();
       if (!templateName.endsWith(TEMPLATE_SUFFIX)) {
         logger.die("Template file name must end with " + TEMPLATE_SUFFIX);
       }
@@ -86,7 +86,6 @@ public class UiBinderGenerator extends Generator {
       } else {
         templateName = slashify(unsuffixed) + TEMPLATE_SUFFIX;
       }
-    }
     return templateName;
   }
 
