@@ -6,9 +6,6 @@ public class Platform {
 
     }
 
-    /**
-    * Returns true if we are running inside NodeWebkit
-    */
     public static native boolean isNodeWebkit()/*-{
 		if ($wnd.nw && $wnd.nw.process && $wnd.nw.process.versions) {
 			return true;
