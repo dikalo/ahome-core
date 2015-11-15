@@ -71,32 +71,31 @@ public class TemplateGenerator extends Generator {
 			}
 			return sanitize(Util.readStreamAsString(stream));
 
-		} else {
-			// first we look at the HTML File
-			templateHtmlFile = annotation.source();
+		}
+		// first we look at the HTML File
+		templateHtmlFile = annotation.source();
 
-			if (templateHtmlFile.length() > 0) {
+		if (templateHtmlFile.length() > 0) {
 
-				if (!templateHtmlFile.endsWith(TEMPLATE_SUFFIX)) {
-					logger.log(TreeLogger.ERROR, "Template file name must end with " + TEMPLATE_SUFFIX);
-					throw new UnableToCompleteException();
-				}
-
-				if (annotation.value().length() != 0) {
-					logger.log(Type.WARN, "Found both source file and inline template, using source file");
-				}
-
-				templateHtmlFile = slashify(interfaceType.getPackage().getName()) + "/" + templateHtmlFile;
-				InputStream stream = getTemplateResource(context, logger, templateHtmlFile);
-				return sanitize(Util.readStreamAsString(stream));
-
-			} else if (annotation.value().length() > 0) {
-				return annotation.value();
-			} else {
-				logger.log(Type.ERROR, "Template annotation found with no contents, cannot generate method , this may cause other failures.");
+			if (!templateHtmlFile.endsWith(TEMPLATE_SUFFIX)) {
+				logger.log(TreeLogger.ERROR, "Template file name must end with " + TEMPLATE_SUFFIX);
+				throw new UnableToCompleteException();
 			}
 
+			if (annotation.value().length() != 0) {
+				logger.log(Type.WARN, "Found both source file and inline template, using source file");
+			}
+
+			templateHtmlFile = slashify(interfaceType.getPackage().getName()) + "/" + templateHtmlFile;
+			InputStream stream = getTemplateResource(context, logger, templateHtmlFile);
+			return sanitize(Util.readStreamAsString(stream));
+
+		} else if (annotation.value().length() > 0) {
+			return annotation.value();
+		} else {
+			logger.log(Type.ERROR, "Template annotation found with no contents, cannot generate method , this may cause other failures.");
 		}
+
 		return null;
 	}
 
@@ -171,9 +170,8 @@ public class TemplateGenerator extends Generator {
 			if (url == null) {
 				l.log(Type.INFO, "URL seems to be null here ... hmmmmss");
 				return null;
-			} else {
-				l.log(Type.INFO, "URL seems to be NOT null.");
 			}
+			l.log(Type.INFO, "URL seems to be NOT null.");
 			try {
 				return url.openStream();
 			} catch (IOException e) {

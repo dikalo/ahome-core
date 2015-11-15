@@ -312,10 +312,9 @@ public class UiBinderParser {
       if (ownerField.isProvided()) {
         createResourceUiField(resourceName, ownerField);
         return;
-      } else {
-        // Let's keep trying, but we know the type at least.
-        resourceType = ownerField.getType().getRawType().getErasedType();
       }
+    // Let's keep trying, but we know the type at least.
+    resourceType = ownerField.getType().getRawType().getErasedType();
     }
 
     /* Nope. If we know the type, maybe a @UiFactory will make it */

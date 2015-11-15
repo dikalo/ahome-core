@@ -58,7 +58,7 @@ public class Bean extends BaseModel {
 
 	@Override
 	public String toString() {
-		return ((Object) getBean()).toString();
+		return getBean().toString();
 	}
 
 	protected Object processValue(Object value) {
