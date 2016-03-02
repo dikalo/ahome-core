@@ -7,13 +7,12 @@
 
 	<property-provider name="applicationType">
   			<![CDATA[
-       				if(((typeof ($wnd) != 'undefined') || (typeof (window) != 'undefined'))){
-            			
-            					return 'web';
-       				}else{
-          					return 'device';
-       				}
-  ]]>
+       			if(((typeof ($wnd) != 'undefined') || (typeof (window) != 'undefined'))){
+            			return 'web';
+       			}else{
+          			    return 'device';
+       			}
+       	     ]]>
 	</property-provider>
 
 </module>
