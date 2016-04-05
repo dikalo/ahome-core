@@ -21,6 +21,7 @@ public abstract class BaseSingleScriptLinker extends AbstractLinker {
 
     protected DefaultTextOutput out;
 
+    @Override
     public ArtifactSet link( TreeLogger logger, LinkerContext context,
             ArtifactSet artifacts ) throws UnableToCompleteException {
 
